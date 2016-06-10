@@ -2,33 +2,13 @@ from matplotlib.pyplot import title, ylim, xlim, ylabel, xlabel, show, gca, plot
 
 from numpy import zeros, array, max
 import seaborn
-
+import ipyplots
 
 def plot_vargen_injection(mpnet):
-    seaborn.set_style("whitegrid")
-
-    ax = gca()
-
     N = mpnet.networks[0].num_vargens
-
     powers = [array([mpnet.networks[i].var_generators[n].P * mpnet.base_power * 1e3 for i in range(mpnet.timesteps)]) for n in
               range(N)]
-
-    for i, power in enumerate(powers):
-        previous = zeros((mpnet.timesteps,))
-        for n in range(i):
-            previous += powers[n]
-        ax.fill_between(range(mpnet.timesteps), previous, previous + power, lw=0.3, alpha=0.5, edgecolor='black',
-                        facecolor=seaborn.color_palette("muted", N)[i], label="Vargen {}".format(i))
-
-    ylim([0, sum([max(power) for power in powers]) * 1.1])
-    xlim([0, mpnet.timesteps])
-
-    # legend(loc='right')
-    ylabel('Vargen Power [kW]')
-    xlabel('Time [h]')
-    title("Vargen Power")
-    show()
+    ipyplots.area_plot(powers ,label="Vargen", title="Vargen Power", xlabel="Time [h]", ylabel='Vargen Power [kW]')
 
 def plot_energy_price(mpnet):
     plot([mpnet.get_network(time=i).buses[0].price for i in range(mpnet.timesteps)],
@@ -38,29 +18,10 @@ def plot_energy_price(mpnet):
     show()
 
 def plot_load_power(mp):
-    seaborn.set_style("whitegrid")
-
-    ax = gca()
-
     load_powers = [array([mp.networks[i].loads[load_id].P * mp.base_power * 1e3 for i in range(mp.timesteps)]) for
                    load_id in range(mp.get_network().num_loads)]
 
-    for i, load_power in enumerate(load_powers):
-        previous_loads = zeros((mp.timesteps,))
-        for n in range(i):
-            previous_loads += load_powers[n]
-        ax.fill_between(range(mp.timesteps), previous_loads, previous_loads + load_power, lw=0.3, alpha=0.5,
-                        edgecolor='black', facecolor=seaborn.color_palette("muted", mp.networks[i].num_loads)[i],
-                        label="Load {}".format(i))
-
-    #ylim([0, sum([max(power) for power in load_powers]) * 1.1 ])
-    xlim([0, mp.timesteps])
-
-    # legend(loc='right')
-    ylabel('Load Power [kW]')
-    xlabel('Time [h]')
-    title("Load Power")
-    show()
+    ipyplots.area_plot(load_powers, ylabel='Load Power [kW]', xlabel='Time [h]', title="Load Power")
 
 def plot_power(mp):
     seaborn.set_style("whitegrid")
@@ -71,84 +32,28 @@ def plot_power(mp):
                    load_id in range(mp.get_network().num_loads)]
     load_powers += [array([battery.P_c * mp.base_power * 1e3 for i in range(mp.timesteps)]) for
                    battery in mp.get_network().batteries]
-    gen_powers = [array([generator.P * mp.base_power * 1e3 for i in range(mp.timesteps)]) for
+    gen_powers = [array([(-1) * generator.P * mp.base_power * 1e3 for i in range(mp.timesteps)]) for
                generator in mp.get_network().generators]
-    gen_powers += [array([battery.P_d * mp.base_power * 1e3 for i in range(mp.timesteps)]) for
+    gen_powers += [array([(-1) *  battery.P_d * mp.base_power * 1e3 for i in range(mp.timesteps)]) for
                    battery in mp.get_network().batteries]
 
-    for i, load_power in enumerate(load_powers):
-        previous_loads = zeros((mp.timesteps,))
-        for n in range(i):
-            previous_loads += load_powers[n]
-        ax.fill_between(range(mp.timesteps), previous_loads, previous_loads + load_power, lw=0.3, alpha=0.5,
-                        edgecolor='black', facecolor=seaborn.color_palette("muted", len(load_power))[i],
-                        label="Load {}".format(i))
-
-    for i, gen_power in enumerate(gen_powers):
-        previous_gens = zeros((mp.timesteps,))
-        for n in range(i):
-            previous_gens -= load_powers[n]
-        ax.fill_between(range(mp.timesteps), previous_gens, previous_gens - gen_power, lw=0.3, alpha=0.5,
-                        edgecolor='black', facecolor=seaborn.color_palette("muted", len(gen_powers))[i],
-                        label="Load {}".format(i))
-
-    #ylim([0, sum([max(power) for power in load_powers]) * 1.1 ])
-    xlim([0, mp.timesteps])
-
-    # legend(loc='right')
-    ylabel('Power [kW]')
-    xlabel('Time [h]')
-    title("Power")
-    show()
+    ipyplots.area_plot(load_powers, label="Load", hold=True)
+    ipyplots.area_plot(gen_powers, label="Load", ylabel="Power [kW]", xlabel='Time [h]', title="Power")
 
 def plot_battery_power(mp):
     """
     Plots the battery power injection of all batteries in the MP-Pfnet network.
     :param mp: The MP-PFNET network
     """
-    seaborn.set_style("whitegrid")
 
-    ax = gca()
-
-    battery_power = [array([mp.networks[i].batteries[bat_id].P * mp.base_power * 1e3 for i in range(mp.timesteps)]) for
+    battery_powers = [array([mp.networks[i].batteries[bat_id].P * mp.base_power * 1e3 for i in range(mp.timesteps)]) for
                      bat_id in range(mp.get_network().num_bats)]
 
-    for i, power in enumerate(battery_power):
-        previous = zeros((mp.timesteps,))
-        for n in range(i):
-            previous += battery_power[n]
-        ax.fill_between(range(mp.timesteps), previous, previous + power, lw=0.3, alpha=0.7, edgecolor='black',
-                        facecolor=seaborn.color_palette("muted", mp.get_network().num_bats)[i],
-                        label="Battery {}".format(i))
-#    ylim([-310, 310])
-    xlim([0, mp.timesteps])
 
-    # legend(loc='right')
-    ylabel('Charging Power [kW]')
-    xlabel('Time [h]')
-    title("Battery Charging Power")
-    show()
+    ipyplots.area_plot(battery_powers, ylabel='Charging Power [kW]', xlabel='Time [h]',  title="Battery Charging Power")
+
 
 def plot_battery_soc(mp):
-    seaborn.set_style("whitegrid")
-
-    ax = gca()
-
-    battery_soc = [array([mp.networks[i].batteries[bat_id].E * mp.base_power * 1e3 for i in range(mp.timesteps)]) for
+    battery_socs = [array([mp.networks[i].batteries[bat_id].E * mp.base_power * 1e3 for i in range(mp.timesteps)]) for
                    bat_id in range(mp.get_network().num_bats)]
-
-    for i, soc in enumerate(battery_soc):
-        previous = zeros((mp.timesteps,))
-        for n in range(i):
-            previous += battery_soc[n]
-        ax.fill_between(range(mp.timesteps), previous, previous + soc, lw=0.3, alpha=0.7, edgecolor='black',
-                        facecolor=seaborn.color_palette("muted", mp.get_network().num_bats)[i],
-                        label="Battery {}".format(i))
-    #ylim([0, 350])
-    xlim([0, mp.timesteps])
-
-    # legend(loc='right')
-    ylabel('SOC [kWh]')
-    xlabel('Time [h]')
-    title("Battery SOC")
-    show()
+    ipyplots.area_plot(battery_socs, ylabel='SOC [kWh]', xlabel='Time [h]', title="Battery SOC")

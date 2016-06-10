@@ -10,4 +10,6 @@ setup(name='pfvis',
                 'PFNET',
                 'mppfnet',
                 'matplotlib',
-                'seaborn'])
+                'seaborn',
+                'ipyplots'
+                ])
