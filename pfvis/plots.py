@@ -62,7 +62,50 @@ def plot_load_power(mp):
     title("Load Power")
     show()
 
+def plot_power(mp):
+    seaborn.set_style("whitegrid")
+
+    ax = gca()
+
+    load_powers = [array([mp.networks[i].loads[load_id].P * mp.base_power * 1e3 for i in range(mp.timesteps)]) for
+                   load_id in range(mp.get_network().num_loads)]
+    load_powers += [array([battery.P_c * mp.base_power * 1e3 for i in range(mp.timesteps)]) for
+                   battery in mp.get_network().batteries]
+    gen_powers = [array([generator.P * mp.base_power * 1e3 for i in range(mp.timesteps)]) for
+               generator in mp.get_network().generators]
+    gen_powers += [array([battery.P_d * mp.base_power * 1e3 for i in range(mp.timesteps)]) for
+                   battery in mp.get_network().batteries]
+
+    for i, load_power in enumerate(load_powers):
+        previous_loads = zeros((mp.timesteps,))
+        for n in range(i):
+            previous_loads += load_powers[n]
+        ax.fill_between(range(mp.timesteps), previous_loads, previous_loads + load_power, lw=0.3, alpha=0.5,
+                        edgecolor='black', facecolor=seaborn.color_palette("muted", len(load_power))[i],
+                        label="Load {}".format(i))
+
+    for i, gen_power in enumerate(gen_powers):
+        previous_gens = zeros((mp.timesteps,))
+        for n in range(i):
+            previous_gens -= load_powers[n]
+        ax.fill_between(range(mp.timesteps), previous_gens, previous_gens - gen_power, lw=0.3, alpha=0.5,
+                        edgecolor='black', facecolor=seaborn.color_palette("muted", len(gen_powers))[i],
+                        label="Load {}".format(i))
+
+    #ylim([0, sum([max(power) for power in load_powers]) * 1.1 ])
+    xlim([0, mp.timesteps])
+
+    # legend(loc='right')
+    ylabel('Power [kW]')
+    xlabel('Time [h]')
+    title("Power")
+    show()
+
 def plot_battery_power(mp):
+    """
+    Plots the battery power injection of all batteries in the MP-Pfnet network.
+    :param mp: The MP-PFNET network
+    """
     seaborn.set_style("whitegrid")
 
     ax = gca()
@@ -75,13 +118,13 @@ def plot_battery_power(mp):
         for n in range(i):
             previous += battery_power[n]
         ax.fill_between(range(mp.timesteps), previous, previous + power, lw=0.3, alpha=0.7, edgecolor='black',
-                        facecolor=seaborn.color_palette("muted", mp.networks[i].num_bats)[i],
+                        facecolor=seaborn.color_palette("muted", mp.get_network().num_bats)[i],
                         label="Battery {}".format(i))
 #    ylim([-310, 310])
     xlim([0, mp.timesteps])
 
     # legend(loc='right')
-    ylabel('Power Injection [kW]')
+    ylabel('Charging Power [kW]')
     xlabel('Time [h]')
     title("Battery Charging Power")
     show()
@@ -99,7 +142,7 @@ def plot_battery_soc(mp):
         for n in range(i):
             previous += battery_soc[n]
         ax.fill_between(range(mp.timesteps), previous, previous + soc, lw=0.3, alpha=0.7, edgecolor='black',
-                        facecolor=seaborn.color_palette("muted", mp.networks[i].num_bats)[i],
+                        facecolor=seaborn.color_palette("muted", mp.get_network().num_bats)[i],
                         label="Battery {}".format(i))
     #ylim([0, 350])
     xlim([0, mp.timesteps])
