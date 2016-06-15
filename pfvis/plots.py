@@ -1,6 +1,6 @@
-from matplotlib.pyplot import title, ylim, xlim, ylabel, xlabel, show, gca, plot
+from matplotlib.pyplot import title, xlim, ylabel, show, gca, plot
 
-from numpy import zeros, array, max
+from numpy import array
 import seaborn
 import ipyplots
 import networkx as nx
@@ -19,15 +19,24 @@ def plot_graph(net):
 
 
 def plot_vargen_injection(mpnet):
-    N = mpnet.networks[0].num_vargens
+    """
+    Plots the aggregated injection by variable generators (renewable generation)
+    :param mpnet: The MP-PFNET network 
+    """
+    num_generators = mpnet.networks[0].num_vargens
     powers = [array([mpnet.networks[i].var_generators[n].P * mpnet.base_power * 1e3 for i in range(mpnet.timesteps)])
               for n in
-              range(N)]
+              range(num_generators)]
     ipyplots.area_plot(powers, label="Vargen", title="Vargen Power", xlabel="Time [h]", ylabel='Vargen Power [kW]')
 
 
-def plot_energy_price(mpnet):
-    plot([mpnet.get_network(time=i).buses[0].price / (mpnet.base_power * 1e3) for i in range(mpnet.timesteps)],
+def plot_energy_price(mpnet, bus_index=0):
+    """
+    Plots the energy price.
+    :param mpnet: The MP-PFNET network
+    :param bus_index: The bus the price should be plotted for. (default: 0)
+    """
+    plot([mpnet.get_network(time=i).buses[bus_index].price / (mpnet.base_power * 1e3) for i in range(mpnet.timesteps)],
          color=seaborn.color_palette("muted", 1)[0])
     ylabel("EUR/kWh")
     title("Energy Price (EUR)")
@@ -36,6 +45,10 @@ def plot_energy_price(mpnet):
 
 
 def plot_load_power(mp):
+    """
+    Plots the aggregated load power
+    :param mp: The MP-PFNET network
+    """
     load_powers = [array([mp.networks[i].loads[load_id].P * mp.base_power * 1e3 for i in range(mp.timesteps)]) for
                    load_id in range(mp.get_network().num_loads)]
 
@@ -43,10 +56,11 @@ def plot_load_power(mp):
 
 
 def plot_power(mp):
-    seaborn.set_style("whitegrid")
+    """
+    Plots the aggregated power of all loads and generators including batteries.
 
-    ax = gca()
-
+    :param mp: The MP-PFNET network
+    """
     load_powers = [array([mp.networks[i].loads[load_id].P * mp.base_power * 1e3 for i in range(mp.timesteps)]) for
                    load_id in range(mp.get_network().num_loads)]
     load_powers += [array([battery.P_c * mp.base_power * 1e3 for i in range(mp.timesteps)]) for
