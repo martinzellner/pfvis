@@ -9,6 +9,7 @@ import networkx as nx
 def plot_graph(net):
     """
     Plots a nice D3 network graph
+
     :param net: a pfnet network
     :return: a IPython HTML object containing the graph
     """
@@ -21,7 +22,8 @@ def plot_graph(net):
 def plot_vargen_injection(mpnet):
     """
     Plots the aggregated injection by variable generators (renewable generation)
-    :param mpnet: The MP-PFNET network 
+
+    :param mpnet: The MP-PFNET network
     """
     num_generators = mpnet.networks[0].num_vargens
     powers = [array([mpnet.networks[i].var_generators[n].P * mpnet.base_power * 1e3 for i in range(mpnet.timesteps)])
@@ -33,6 +35,7 @@ def plot_vargen_injection(mpnet):
 def plot_energy_price(mpnet, bus_index=0):
     """
     Plots the energy price.
+
     :param mpnet: The MP-PFNET network
     :param bus_index: The bus the price should be plotted for. (default: 0)
     """
@@ -47,6 +50,7 @@ def plot_energy_price(mpnet, bus_index=0):
 def plot_load_power(mp):
     """
     Plots the aggregated load power
+
     :param mp: The MP-PFNET network
     """
     load_powers = [array([mp.networks[i].loads[load_id].P * mp.base_power * 1e3 for i in range(mp.timesteps)]) for
@@ -88,6 +92,12 @@ def plot_battery_power(mp):
 
 
 def plot_battery_soc(mp):
+    """
+    
+
+    :param mp:
+    :return:
+    """
     battery_socs = [array([mp.networks[i].batteries[bat_id].E * mp.base_power * 1e3 for i in range(mp.timesteps)]) for
                     bat_id in range(mp.get_network().num_bats)]
     ipyplots.area_plot(battery_socs, ylabel='SOC [kWh]', xlabel='Time [h]', title="Battery SOC")
