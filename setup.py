@@ -11,5 +11,6 @@ setup(name='pfvis',
                 'mppfnet',
                 'matplotlib',
                 'seaborn',
-                'ipyplots'
+                'ipyplots',
+                'networkx'
                 ])
